@@ -158,17 +158,25 @@
         try {
           const sessionId = getSessionId();
 
-          const WORKER_API_BASE = window.WORKER_API_BASE || "";
-
+          const WORKER_API_BASE =
+            "https://cf-ai-worker.mickyacquah155.workers.dev";
           const res = await fetch(`${WORKER_API_BASE}/api/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sessionId, message }),
           });
 
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Request failed");
-
+          const text = await res.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            throw new Error(
+              `Non-JSON response (${res.status}). Check WORKER_API_BASE. Body: ${text.slice(0, 120)}...`,
+            );
+          }
+          if (!res.ok)
+            throw new Error(data.error || `Request failed (${res.status})`);
           addMessage("assistant", data.reply);
         } catch (err) {
           addMessage("assistant", "Error: " + err.message);
